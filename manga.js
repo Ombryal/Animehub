@@ -72,7 +72,7 @@ function renderHero(items) {
                     <div class="hero-meta">
                         <span>⭐ ${(m.meanScore/10).toFixed(1)}</span>
                         <span>•</span>
-                        <span style="color:#fda4af;">Details</span>
+                        <span style="color:#fda4af;">Info</span>
                     </div>
                 </div>
             </div>
