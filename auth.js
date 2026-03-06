@@ -114,19 +114,18 @@ document.addEventListener('DOMContentLoaded', initGlobalUI);
 // --- SEARCH ENGINE LOGIC ---
 
 async function handleSearch(inputElement, resultContainerId, mediaType = 'ANIME') {
-    const queryStr = inputElement.value;
+    const queryStr = inputElement.value.trim();
     const container = document.getElementById(resultContainerId);
     
     if (queryStr.length < 3) {
-        if (queryStr.length === 0 && (resultContainerId === 'popular-vertical-list')) {
-            window.location.reload(); // Reset Discovery pages if search is cleared
-        }
+        container.classList.remove('active');
+        container.innerHTML = '';
         return;
     }
 
     const searchQuery = `
     query ($search: String, $type: MediaType) {
-        Page(perPage: 20) {
+        Page(perPage: 15) {
             media(search: $search, type: $type) {
                 id title { romaji } coverImage { large } meanScore format
             }
@@ -135,6 +134,7 @@ async function handleSearch(inputElement, resultContainerId, mediaType = 'ANIME'
 
     const data = await apiFetch(searchQuery, { search: queryStr, type: mediaType });
     if (data && data.Page.media) {
+        container.classList.add('active');
         renderLandscapeResults(resultContainerId, data.Page.media, mediaType);
     }
 }
@@ -143,33 +143,41 @@ function renderLandscapeResults(containerId, items, type) {
     const container = document.getElementById(containerId);
     if (!container) return;
 
+    if (items.length === 0) {
+        container.innerHTML = `<p style="padding:20px; text-align:center; color:var(--text-dim);">No results found.</p>`;
+        return;
+    }
+
     container.innerHTML = items.map(media => {
         const score = media.meanScore ? (media.meanScore / 10).toFixed(1) : "??";
         return `
-            <div class="landscape-card" onclick="window.location.href='details.html?id=${media.id}&type=${type}'" style="margin-bottom: 12px;">
-                <div class="card-banner" style="background-image: url('${media.coverImage.large}')"></div>
-                <div class="card-content">
-                    <img src="${media.coverImage.large}" class="mini-poster">
+            <div class="landscape-card" onclick="window.location.href='details.html?id=${media.id}&type=${type}'" style="margin-bottom: 8px; height: 90px;">
+                <div class="card-content" style="padding: 8px;">
+                    <img src="${media.coverImage.large}" class="mini-poster" style="width: 50px; height: 70px;">
                     <div class="card-info">
-                        <h4>${media.title.romaji}</h4>
-                        <p><i class="fas fa-star" style="color:var(--accent)"></i> ${score} • ${media.format || type}</p>
+                        <h4 style="font-size: 0.85rem;">${media.title.romaji}</h4>
+                        <p style="font-size: 0.65rem;"><i class="fas fa-star" style="color:var(--accent)"></i> ${score} • ${media.format || type}</p>
                     </div>
                 </div>
             </div>`;
     }).join('');
 }
 
-// Global Event Listeners for Search Bars
+// Close search window when clicking outside
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.inline-search-box') && !e.target.closest('.search-bar')) {
+        document.querySelectorAll('.search-results-floating').forEach(el => el.classList.remove('active'));
+    }
+});
+
 document.addEventListener('DOMContentLoaded', () => {
-    // index.html Search
-    const gSearch = document.getElementById('global-search-input');
-    if (gSearch) gSearch.addEventListener('input', () => handleSearch(gSearch, 'search-results', 'ANIME'));
+    const aInput = document.getElementById('anime-search-input');
+    if (aInput) aInput.addEventListener('input', () => handleSearch(aInput, 'anime-search-results', 'ANIME'));
 
-    // anime.html Search
-    const aSearch = document.getElementById('anime-search-input');
-    if (aSearch) aSearch.addEventListener('input', () => handleSearch(aSearch, 'popular-vertical-list', 'ANIME'));
-
-    // manga.html Search
-    const mSearch = document.getElementById('manga-search-input');
-    if (mSearch) mSearch.addEventListener('input', () => handleSearch(mSearch, 'popular-vertical-list', 'MANGA'));
+    const mInput = document.getElementById('manga-search-input');
+    if (mInput) mInput.addEventListener('input', () => handleSearch(mInput, 'manga-search-results', 'MANGA'));
+    
+    // For Global Search on Home
+    const gInput = document.getElementById('global-search-input');
+    if (gInput) gInput.addEventListener('input', () => handleSearch(gInput, 'search-results', 'ANIME'));
 });
