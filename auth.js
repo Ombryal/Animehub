@@ -110,3 +110,66 @@ function hideLoader() {
 }
 
 document.addEventListener('DOMContentLoaded', initGlobalUI);
+
+// --- SEARCH ENGINE LOGIC ---
+
+async function handleSearch(inputElement, resultContainerId, mediaType = 'ANIME') {
+    const queryStr = inputElement.value;
+    const container = document.getElementById(resultContainerId);
+    
+    if (queryStr.length < 3) {
+        if (queryStr.length === 0 && (resultContainerId === 'popular-vertical-list')) {
+            window.location.reload(); // Reset Discovery pages if search is cleared
+        }
+        return;
+    }
+
+    const searchQuery = `
+    query ($search: String, $type: MediaType) {
+        Page(perPage: 20) {
+            media(search: $search, type: $type) {
+                id title { romaji } coverImage { large } meanScore format
+            }
+        }
+    }`;
+
+    const data = await apiFetch(searchQuery, { search: queryStr, type: mediaType });
+    if (data && data.Page.media) {
+        renderLandscapeResults(resultContainerId, data.Page.media, mediaType);
+    }
+}
+
+function renderLandscapeResults(containerId, items, type) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    container.innerHTML = items.map(media => {
+        const score = media.meanScore ? (media.meanScore / 10).toFixed(1) : "??";
+        return `
+            <div class="landscape-card" onclick="window.location.href='details.html?id=${media.id}&type=${type}'" style="margin-bottom: 12px;">
+                <div class="card-banner" style="background-image: url('${media.coverImage.large}')"></div>
+                <div class="card-content">
+                    <img src="${media.coverImage.large}" class="mini-poster">
+                    <div class="card-info">
+                        <h4>${media.title.romaji}</h4>
+                        <p><i class="fas fa-star" style="color:var(--accent)"></i> ${score} • ${media.format || type}</p>
+                    </div>
+                </div>
+            </div>`;
+    }).join('');
+}
+
+// Global Event Listeners for Search Bars
+document.addEventListener('DOMContentLoaded', () => {
+    // index.html Search
+    const gSearch = document.getElementById('global-search-input');
+    if (gSearch) gSearch.addEventListener('input', () => handleSearch(gSearch, 'search-results', 'ANIME'));
+
+    // anime.html Search
+    const aSearch = document.getElementById('anime-search-input');
+    if (aSearch) aSearch.addEventListener('input', () => handleSearch(aSearch, 'popular-vertical-list', 'ANIME'));
+
+    // manga.html Search
+    const mSearch = document.getElementById('manga-search-input');
+    if (mSearch) mSearch.addEventListener('input', () => handleSearch(mSearch, 'popular-vertical-list', 'MANGA'));
+});
