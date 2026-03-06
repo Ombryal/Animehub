@@ -274,3 +274,67 @@ body {
     0% { opacity: 0.7; }
     100% { opacity: 1; }
 }
+
+/* Landscape Card Styles */
+.landscape-card {
+    position: relative;
+    width: 100%;
+    height: 140px;
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 15px;
+    cursor: pointer;
+    border: 1px solid var(--glass-border);
+    transition: var(--transition-smooth);
+}
+
+.landscape-card:active { transform: scale(0.98); }
+
+.card-banner {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    transition: transform 0.8s ease;
+}
+
+.landscape-card:hover .card-banner { transform: scale(1.1); }
+
+.card-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(2,6,23,0.9) 30%, rgba(2,6,23,0.4) 100%);
+}
+
+.card-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    height: 100%;
+}
+
+.mini-poster {
+    width: 80px;
+    height: 110px;
+    border-radius: 12px;
+    object-fit: cover;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+}
+
+.card-info h4 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.card-info p {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+}
