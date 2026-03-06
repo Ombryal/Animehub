@@ -759,3 +759,54 @@ body {
     position: relative;
     z-index: 1; /* Keep the hero at a low layer */
 }
+
+/* 17. Stats Grid Styling */
+.stats-grid-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: 15px;
+    padding: 12px 15px;
+}
+
+.stat-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-dim);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.stat-header i { color: var(--accent); width: 15px; }
+.stat-value { font-weight: 800; font-size: 1rem; color: #fff; }
+
+/* Character & VA Grid */
+.char-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+.char-card {
+    background: var(--glass-bg);
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    overflow: hidden;
+    height: 70px;
+    border: 1px solid var(--glass-border);
+}
+
+.char-side, .va-side { display: flex; align-items: center; gap: 10px; width: 48%; }
+.va-side { justify-content: flex-end; text-align: right; }
+.char-side img, .va-side img { width: 50px; height: 100%; object-fit: cover; }
+
+.char-info span, .va-info span { font-size: 0.8rem; font-weight: 700; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.char-info small, .va-info small { font-size: 0.65rem; color: var(--text-dim); }
+
+.section-title { font-size: 1.1rem; margin-bottom: 15px; font-weight: 800; border-left: 4px solid var(--accent); padding-left: 10px; }
+.detail-block { padding: 20px; margin-bottom: 20px; }
+.section-label { color: var(--accent); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; font-weight: 800; }
