@@ -1,5 +1,5 @@
 /**
- * auth.js - The Production Engine (Updated with Stats & Search)
+  auth.js - The Production Engine (Updated with Stats & Search)
  */
 
 const CONFIG = {
