@@ -135,29 +135,32 @@ async function handleSearch(inputElement, resultContainerId, mediaType = 'ANIME'
     const data = await apiFetch(searchQuery, { search: queryStr, type: mediaType });
     if (data && data.Page.media) {
         container.classList.add('active');
-        renderLandscapeResults(resultContainerId, data.Page.media, mediaType);
+        renderFloatingResults(resultContainerId, data.Page.media, mediaType);
     }
 }
 
-function renderLandscapeResults(containerId, items, type) {
+function renderFloatingResults(containerId, items, type) {
     const container = document.getElementById(containerId);
     if (!container) return;
 
     if (items.length === 0) {
-        container.innerHTML = `<p style="padding:20px; text-align:center; color:var(--text-dim);">No results found.</p>`;
+        container.innerHTML = `<p style="padding:20px; text-align:center; color:var(--text-dim); font-size:0.85rem;">No results found.</p>`;
         return;
     }
 
+    // This creates a vertical list that won't trigger flexbox "side-by-side" bugs
     container.innerHTML = items.map(media => {
         const score = media.meanScore ? (media.meanScore / 10).toFixed(1) : "??";
         return `
-            <div class="landscape-card" onclick="window.location.href='details.html?id=${media.id}&type=${type}'" style="margin-bottom: 8px; height: 90px;">
-                <div class="card-content" style="padding: 8px;">
-                    <img src="${media.coverImage.large}" class="mini-poster" style="width: 50px; height: 70px;">
-                    <div class="card-info">
-                        <h4 style="font-size: 0.85rem;">${media.title.romaji}</h4>
-                        <p style="font-size: 0.65rem;"><i class="fas fa-star" style="color:var(--accent)"></i> ${score} • ${media.format || type}</p>
-                    </div>
+            <div class="search-item-row" onclick="window.location.href='details.html?id=${media.id}&type=${type}'" 
+                 style="display: flex; align-items: center; gap: 12px; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer;">
+                <img src="${media.coverImage.large}" style="width: 40px; height: 55px; border-radius: 6px; object-fit: cover; flex-shrink: 0;">
+                <div style="flex: 1; overflow: hidden;">
+                    <h4 style="font-size: 0.85rem; margin: 0; color: white; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">${media.title.romaji}</h4>
+                    <p style="font-size: 0.7rem; margin: 4px 0 0; color: var(--accent); font-weight: 600;">
+                        <i class="fas fa-star" style="font-size: 0.6rem;"></i> ${score} 
+                        <span style="color: var(--text-dim); font-weight: 400; margin-left: 5px;">• ${media.format || type}</span>
+                    </p>
                 </div>
             </div>`;
     }).join('');
@@ -165,19 +168,24 @@ function renderLandscapeResults(containerId, items, type) {
 
 // Close search window when clicking outside
 document.addEventListener('click', (e) => {
+    // Check if the click was outside both the input and the results box
     if (!e.target.closest('.inline-search-box') && !e.target.closest('.search-bar')) {
-        document.querySelectorAll('.search-results-floating').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.search-results-floating').forEach(el => {
+            el.classList.remove('active');
+        });
     }
 });
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Anime Page Search
     const aInput = document.getElementById('anime-search-input');
     if (aInput) aInput.addEventListener('input', () => handleSearch(aInput, 'anime-search-results', 'ANIME'));
 
+    // Manga Page Search
     const mInput = document.getElementById('manga-search-input');
     if (mInput) mInput.addEventListener('input', () => handleSearch(mInput, 'manga-search-results', 'MANGA'));
     
-    // For Global Search on Home
+    // Home Page Global Search (Bottom Sheet)
     const gInput = document.getElementById('global-search-input');
     if (gInput) gInput.addEventListener('input', () => handleSearch(gInput, 'search-results', 'ANIME'));
 });
