@@ -1,77 +1,69 @@
 /**
- * home.js - Real-Time Dashboard Logic
- * Fetches exact authenticated user data and their active lists.
+ * home.js - Robust Home Page Logic
  */
-
 async function initHome() {
-    // STEP 1: Fetch the real logged-in user's identity and stats
-    const viewerQuery = `query {
-        Viewer { 
-            id
-            name 
-            statistics { 
-                anime { episodesWatched } 
-                manga { chaptersRead } 
-            } 
+    console.log("Home script initialized...");
+
+    try {
+        // 1. Wait for auth.js to save the token (max 3 seconds)
+        let attempts = 0;
+        while (!localStorage.getItem('anilist_token') && attempts < 30) {
+            await new Promise(r => setTimeout(r, 100)); 
+            attempts++;
         }
-    }`;
 
-    const viewerData = await apiFetch(viewerQuery);
-
-    if (viewerData && viewerData.Viewer) {
-        const user = viewerData.Viewer;
-
-        // Populate User Stats
-        const nameEl = document.getElementById('user-name');
-        if (nameEl) nameEl.innerText = user.name;
-        
-        const epEl = document.getElementById('ep-count');
-        if (epEl) epEl.innerText = user.statistics.anime.episodesWatched;
-        
-        const chEl = document.getElementById('ch-count');
-        if (chEl) chEl.innerText = user.statistics.manga.chaptersRead;
-
-        // STEP 2: Use the real User ID to fetch their real-time active lists
-        const listsQuery = `query ($userId: Int) {
-            Watching: MediaListCollection(userId: $userId, type: ANIME, status: CURRENT) {
-                lists { entries { media { id title { romaji } coverImage { large } meanScore } } }
+        // 2. Query for User Profile + Lists
+        const query = `
+        query {
+            Viewer {
+                name
+                avatar { large }
+                statistics {
+                    anime { episodesWatched }
+                    manga { chaptersRead }
+                }
             }
-            Reading: MediaListCollection(userId: $userId, type: MANGA, status: CURRENT) {
-                lists { entries { media { id title { romaji } coverImage { large } meanScore } } }
+            animeList: Page(perPage: 10) {
+                mediaList(status: CURRENT, type: ANIME) {
+                    media { id title { romaji } coverImage { large } meanScore }
+                }
+            }
+            mangaList: Page(perPage: 10) {
+                mediaList(status: CURRENT, type: MANGA) {
+                    media { id title { romaji } coverImage { large } meanScore }
+                }
             }
         }`;
 
-        const listData = await apiFetch(listsQuery, { userId: user.id });
+        const data = await apiFetch(query);
 
-        if (listData) {
-            // Safely extract the arrays (AniList puts them inside 'lists[0].entries')
-            const watchingList = listData.Watching.lists[0]?.entries || [];
-            const readingList = listData.Reading.lists[0]?.entries || [];
-
-            // Render Real-Time Anime
-            const animeScroll = document.getElementById('anime-scroll');
-            if (watchingList.length > 0) {
-                renderScrollerItems('anime-scroll', watchingList, 'ANIME');
-            } else if (animeScroll) {
-                animeScroll.innerHTML = `<p style="color: var(--text-dim); padding: 10px; font-size: 0.85rem;">You aren't currently watching anything.</p>`;
-            }
-
-            // Render Real-Time Manga
-            const mangaScroll = document.getElementById('manga-scroll');
-            if (readingList.length > 0) {
-                renderScrollerItems('manga-scroll', readingList, 'MANGA');
-            } else if (mangaScroll) {
-                mangaScroll.innerHTML = `<p style="color: var(--text-dim); padding: 10px; font-size: 0.85rem;">You aren't currently reading anything.</p>`;
-            }
+        if (!data || !data.Viewer) {
+            console.error("No user data returned. Check token/Redirect URI.");
+            return;
         }
-    } else {
-        console.error("Failed to fetch Viewer data. Token might be invalid.");
-    }
 
-    // STEP 3: Sync Profile Picture & Reveal UI
-    await updateHeaderPFP();
-    hideLoader();
+        // 3. Populate Header & Stats
+        document.getElementById('user-name').innerText = data.Viewer.name;
+        document.getElementById('user-pfp').src = data.Viewer.avatar.large;
+        document.getElementById('ep-count').innerText = data.Viewer.statistics.anime.episodesWatched.toLocaleString();
+        document.getElementById('ch-count').innerText = data.Viewer.statistics.manga.chaptersRead.toLocaleString();
+
+        // 4. Render Horizontal Scrollers
+        renderScrollerItems('anime-scroll', data.animeList.mediaList, 'ANIME');
+        renderScrollerItems('manga-scroll', data.mangaList.mediaList, 'MANGA');
+
+    } catch (err) {
+        console.error("Home Page Error:", err);
+    } finally {
+        // 5. THE FIX: Hide loader even if there is an error
+        if (typeof hideLoader === 'function') {
+            hideLoader();
+        } else {
+            // Fallback if auth.js failed to load hideLoader
+            document.getElementById('loading-overlay').style.display = 'none';
+        }
+    }
 }
 
-// Start the sequence when the page loads
+// Start when the page is ready
 document.addEventListener('DOMContentLoaded', initHome);
