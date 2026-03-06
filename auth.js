@@ -52,24 +52,41 @@ async function initGlobalUI() {
             document.getElementById('ep-stat').innerText = v.statistics.anime.episodesWatched;
             document.getElementById('ch-stat').innerText = v.statistics.manga.chaptersRead;
 
-            // INSTANT HIDE: Once text is updated
             hideLoader();
 
-            // Background List Fetch
-            const listQuery = `query ($userId: Int) {
+            // --- NEW: Unified Background Fetch (Lists + Recommendations) ---
+            const homeDataQuery = `query ($userId: Int) {
                 watching: MediaListCollection(userId: $userId, status: CURRENT, type: ANIME) {
-                    lists { entries { media { id title { romaji } coverImage { large } meanScore } } }
+                    lists { entries { progress media { id title { romaji } coverImage { large } meanScore episodes } } }
                 }
                 reading: MediaListCollection(userId: $userId, status: CURRENT, type: MANGA) {
-                    lists { entries { media { id title { romaji } coverImage { large } meanScore } } }
+                    lists { entries { progress media { id title { romaji } coverImage { large } meanScore chapters } } }
+                }
+                recAnime: Page(perPage: 10) {
+                    media(sort: TRENDING_DESC, type: ANIME, isAdult: false) {
+                        id title { romaji } coverImage { large } meanScore
+                    }
+                }
+                recManga: Page(perPage: 10) {
+                    media(sort: TRENDING_DESC, type: MANGA, isAdult: false) {
+                        id title { romaji } coverImage { large } meanScore
+                    }
                 }
             }`;
-            apiFetch(listQuery, { userId: v.id }).then(lData => {
-                if (lData) {
-                    const wArr = lData.watching.lists.flatMap(l => l.entries);
-                    const rArr = lData.reading.lists.flatMap(l => l.entries);
-                    renderScrollerItems('anime-scroll', wArr, 'ANIME');
-                    renderScrollerItems('manga-scroll', rArr, 'MANGA');
+
+            apiFetch(homeDataQuery, { userId: v.id }).then(data => {
+                if (data) {
+                    // Extract Lists
+                    const wArr = data.watching.lists.flatMap(l => l.entries);
+                    const rArr = data.reading.lists.flatMap(l => l.entries);
+                    
+                    // Render user lists (true = show progress badge)
+                    renderScrollerItems('anime-scroll', wArr, 'ANIME', true);
+                    renderScrollerItems('manga-scroll', rArr, 'MANGA', true);
+                    
+                    // Render recommendations (false = no progress badge)
+                    renderScrollerItems('rec-anime-scroll', data.recAnime.media, 'ANIME', false);
+                    renderScrollerItems('rec-manga-scroll', data.recManga.media, 'MANGA', false);
                 }
             });
         }
@@ -118,19 +135,35 @@ async function handleSearch(input, containerId, forcedType = null) {
     }).join('');
 }
 
-function renderScrollerItems(id, entries, type) {
+// --- UPDATED RENDER ENGINE ---
+function renderScrollerItems(id, entries, type, isUserList = false) {
     const container = document.getElementById(id);
     if (!container) return;
     if (!entries || entries.length === 0) {
         container.innerHTML = `<p style="color:var(--text-dim); padding:20px; font-size:0.8rem;">No entries found.</p>`;
         return;
     }
+    
     container.innerHTML = entries.map(e => {
         const m = e.media || e;
         const score = m.meanScore ? (m.meanScore/10).toFixed(1) : "??";
+        
+        // Build the progress badge if it's a user list
+        let progressBadge = '';
+        if (isUserList) {
+            const currentProgress = e.progress || 0;
+            const total = (type === 'ANIME' ? m.episodes : m.chapters) || '~';
+            
+            progressBadge = `
+                <div style="position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); padding: 4px 8px; border-radius: 8px; font-size: 0.65rem; font-weight: 800; color: white; border: 1px solid rgba(255,255,255,0.15); z-index: 2;">
+                    ${currentProgress} <span style="color: var(--accent); margin: 0 2px;">|</span> ${total}
+                </div>`;
+        }
+
         return `
             <div class="media-item" onclick="window.location.href='details.html?id=${m.id}&type=${type}'">
                 <div class="img-box">
+                    ${progressBadge}
                     <img src="${m.coverImage.large}" loading="lazy">
                     <div class="purple-badge">${score}</div>
                 </div>
