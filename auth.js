@@ -48,7 +48,6 @@ async function apiFetch(query, variables = {}) {
 // --- NEW: Global UI Logic ---
 
 async function initGlobalUI() {
-    // 1. Search Sheet Toggle (Only applies if the sheet exists, like on index.html)
     const openSearch = document.getElementById('open-search');
     const closeSearch = document.getElementById('close-search');
     const searchSheet = document.getElementById('search-sheet');
@@ -60,7 +59,6 @@ async function initGlobalUI() {
         closeSearch.onclick = () => searchSheet.classList.remove('active');
     }
 
-    // 2. Stats Loader Logic (DEFENSIVE: Only fetch data if dashboard elements exist!)
     if (document.getElementById('username-display')) {
         const query = `query { 
             Viewer { 
@@ -123,6 +121,12 @@ async function handleSearch(inputElement, resultContainerId, mediaType = 'ANIME'
         return;
     }
 
+    // Show "Searching..." status while waiting for API
+    container.classList.add('active');
+    container.innerHTML = `<div style="padding:20px; text-align:center; color:var(--accent); font-size:0.8rem; font-weight:700;">
+        <i class="fas fa-circle-notch fa-spin"></i> SEARCHING...
+    </div>`;
+
     const searchQuery = `
     query ($search: String, $type: MediaType) {
         Page(perPage: 15) {
@@ -134,7 +138,6 @@ async function handleSearch(inputElement, resultContainerId, mediaType = 'ANIME'
 
     const data = await apiFetch(searchQuery, { search: queryStr, type: mediaType });
     if (data && data.Page.media) {
-        container.classList.add('active');
         renderFloatingResults(resultContainerId, data.Page.media, mediaType);
     }
 }
@@ -148,7 +151,6 @@ function renderFloatingResults(containerId, items, type) {
         return;
     }
 
-    // This creates a vertical list that won't trigger flexbox "side-by-side" bugs
     container.innerHTML = items.map(media => {
         const score = media.meanScore ? (media.meanScore / 10).toFixed(1) : "??";
         return `
@@ -166,9 +168,7 @@ function renderFloatingResults(containerId, items, type) {
     }).join('');
 }
 
-// Close search window when clicking outside
 document.addEventListener('click', (e) => {
-    // Check if the click was outside both the input and the results box
     if (!e.target.closest('.inline-search-box') && !e.target.closest('.search-bar')) {
         document.querySelectorAll('.search-results-floating').forEach(el => {
             el.classList.remove('active');
@@ -177,15 +177,12 @@ document.addEventListener('click', (e) => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Anime Page Search
     const aInput = document.getElementById('anime-search-input');
     if (aInput) aInput.addEventListener('input', () => handleSearch(aInput, 'anime-search-results', 'ANIME'));
 
-    // Manga Page Search
     const mInput = document.getElementById('manga-search-input');
     if (mInput) mInput.addEventListener('input', () => handleSearch(mInput, 'manga-search-results', 'MANGA'));
     
-    // Home Page Global Search (Bottom Sheet)
     const gInput = document.getElementById('global-search-input');
     if (gInput) gInput.addEventListener('input', () => handleSearch(gInput, 'search-results', 'ANIME'));
 });
