@@ -1,19 +1,20 @@
 /**
- * anime.js - Step-by-Step Robust Version
+ * anime.js - Enhanced Discovery Logic
+ * Handles horizontal scrollers and the vertical landscape list.
  */
 
 async function initAnimeDiscovery() {
-    console.log("Anime discovery starting...");
+    console.log("Anime discovery initializing...");
 
     try {
-        // 1. THE WAIT LOOP: Wait up to 3 seconds for the token to be ready
-        let waitAttempts = 0;
-        while (!localStorage.getItem('anilist_token') && waitAttempts < 30) {
-            await new Promise(r => setTimeout(r, 100));
-            waitAttempts++;
+        // 1. Safety Wait: Wait for auth.js to confirm the token is saved
+        let attempts = 0;
+        while (!localStorage.getItem('anilist_token') && attempts < 25) {
+            await new Promise(r => setTimeout(r, 150)); 
+            attempts++;
         }
 
-        // 2. The Multi-Section Query
+        // 2. Optimized Multi-Section Query
         const query = `query {
             Trending: Page(perPage: 12) { 
                 media(sort: TRENDING_DESC, type: ANIME, isAdult: false) { 
@@ -40,26 +41,27 @@ async function initAnimeDiscovery() {
         const data = await apiFetch(query);
 
         if (data) {
-            // 3. Render horizontal scrollers (Helper in auth.js)
+            // 3. Render horizontal sections using the helper in auth.js
             renderScrollerItems('trending-scroll', data.Trending?.media, 'ANIME');
             renderScrollerItems('top-scroll', data.TopRated?.media, 'ANIME');
-            renderScrollerItems('popular-scroll', data.Movies?.media, 'ANIME');
+            renderScrollerItems('movies-scroll', data.Movies?.media, 'ANIME');
             
-            // 4. Render your custom landscape list
+            // 4. Render the special landscape cards
             renderVerticalPopularList('popular-vertical-list', data.AllTimePopular?.media);
         } else {
-            console.error("No data returned from API.");
+            console.error("No discovery data received.");
         }
+
     } catch (error) {
-        console.error("Initialization failed:", error);
+        console.error("Discovery Page Error:", error);
     } finally {
-        // 5. Hide the loader NO MATTER WHAT
-        if (typeof hideLoader === 'function') hideLoader();
+        // 5. Always hide the loader, even if things go wrong
+        hideLoader();
     }
 }
 
 /**
- * Landscape Card Renderer
+ * Custom renderer for Landscape Cards (Not in auth.js because it's unique to this page)
  */
 function renderVerticalPopularList(containerId, items) {
     const container = document.getElementById(containerId);
@@ -91,4 +93,5 @@ function renderVerticalPopularList(containerId, items) {
     }).join('');
 }
 
+// Kick off initialization
 document.addEventListener('DOMContentLoaded', initAnimeDiscovery);
