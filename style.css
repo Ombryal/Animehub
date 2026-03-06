@@ -208,16 +208,31 @@ body {
 }
 
 /* =========================================
-   7. DETAILS PAGE SPECIFICS & STATS
+   7. DETAILS PAGE SPECIFICS
    ========================================= */
-.stat p, small {
-    text-transform: uppercase;
-    letter-spacing: 1px;
+.main-col {
+    width: 100%;
+    animation: fadeUp 0.8s ease-out;
 }
 
-/* Scrollbar styling for descriptions */
-#det-desc::-webkit-scrollbar { width: 4px; }
-#det-desc::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 4px; }
+#det-desc {
+    font-size: 0.95rem;
+    line-height: 1.8;
+    color: var(--text-dim);
+}
+
+/* Genre Badges (If you decide to keep them in JS/HTML) */
+.genre-badge {
+    background: var(--glass-highlight);
+    border: 1px solid var(--glass-border);
+    color: var(--accent);
+    padding: 6px 14px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
 
 /* =========================================
    8. SYSTEM & LOADERS
@@ -259,176 +274,3 @@ body {
     0% { opacity: 0.7; }
     100% { opacity: 1; }
 }
-
-/* =========================================
-   10. VERTICAL POPULAR LIST (LANDSCAPE)
-   ========================================= */
-
-/* The main container for the vertical items */
-#popular-vertical-list {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    width: 100%;
-    margin-top: 10px;
-}
-
-/* The card itself */
-.landscape-card {
-    position: relative;
-    width: 100%;
-    height: 150px; /* Adjust height to match your screen size preference */
-    border-radius: 24px;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    border: 1px solid var(--glass-border);
-    transition: var(--transition-smooth);
-    background-color: var(--bg-base); /* Fallback while loading */
-}
-
-/* Hover effect */
-.landscape-card:hover {
-    transform: translateY(-3px);
-    border-color: var(--glass-highlight);
-}
-
-/* The background banner image */
-.card-banner {
-    position: absolute;
-    inset: 0;
-    background-size: cover;
-    background-position: center 20%; /* Focus on the upper part of the art */
-    z-index: 1;
-}
-
-/* Dark gradient overlay for text readability */
-.card-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg, 
-        rgba(2, 6, 23, 0.95) 0%, 
-        rgba(2, 6, 23, 0.7) 40%, 
-        rgba(2, 6, 23, 0.3) 100%);
-    z-index: 2;
-}
-
-/* Content wrapper (Poster + Text) */
-.card-content {
-    position: relative;
-    z-index: 3;
-    display: flex;
-    align-items: center;
-    padding: 0 20px;
-    gap: 18px;
-    width: 100%;
-}
-
-/* The small vertical poster on the left */
-.mini-poster {
-    width: 80px;
-    height: 115px;
-    border-radius: 12px;
-    object-fit: cover;
-    flex-shrink: 0; /* Prevents the image from squishing */
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* Text info area */
-.card-info {
-    flex: 1;
-    overflow: hidden;
-}
-
-.card-info h4 {
-    font-size: 1.1rem;
-    font-weight: 800;
-    color: var(--text-main);
-    margin-bottom: 4px;
-    /* Limit title to 1 line with ellipsis (...) */
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.card-info p {
-    font-size: 0.85rem;
-    color: var(--text-dim);
-    font-weight: 500;
-}
-
-/* =========================================
-   11. DETAILS PAGE GRID & SIDEBAR
-   ========================================= */
-
-/* Creates the split layout for Desktop */
-.details-grid {
-    display: grid;
-    grid-template-columns: 1fr 280px;
-    gap: 30px;
-}
-
-/* Styling for the technical data rows in the sidebar */
-.sidebar-stat {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 14px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    padding-bottom: 8px;
-}
-
-.sidebar-stat span {
-    font-size: 0.7rem;
-    color: var(--text-dim);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.sidebar-stat p {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--text-main);
-}
-
-/* Character Card styling for the grid */
-.char-card {
-    text-align: center;
-    transition: var(--transition-smooth);
-}
-
-.char-card img {
-    width: 100%;
-    aspect-ratio: 2/3;
-    object-fit: cover;
-    border-radius: 12px;
-    margin-bottom: 8px;
-    border: 1px solid var(--glass-border);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-}
-
-.char-card:hover img {
-    transform: translateY(-5px);
-    border-color: var(--accent);
-}
-
-/* Mobile Responsiveness: Stacks the sidebar on top of/below content */
-@media (max-width: 850px) {
-    .details-grid {
-        grid-template-columns: 1fr;
-    }
-    .sidebar {
-        margin-top: 20px;
-    }
-    #det-title {
-        font-size: 1.8rem;
-    }
-}
-
-/* SECTION GAP FIX: Pulls discovery sections closer together */
-.section-group + .section-group {
-    margin-top: -10px;
-      }
